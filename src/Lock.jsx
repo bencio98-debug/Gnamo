@@ -30,7 +30,7 @@ export default function Lock({ onUnlock }) {
   return (
     <div className="lock">
       <form className={'lock-card' + (wrong ? ' shake' : '')} onSubmit={submit}>
-        <h1>Gnamo</h1>
+        <img className="lock-logo" src="/logo.png" alt="Gnamo" width="150" height="150" />
         <p className="lock-sub">Inserisci il codice</p>
         <input
           className="lock-input"

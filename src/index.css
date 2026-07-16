@@ -149,15 +149,16 @@ body {
   padding: 28px 22px;
   text-align: center;
 }
-.lock-card h1 {
-  margin: 0;
-  font-size: 34px;
-  background: linear-gradient(90deg, #8b97ff, #b98bff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+/* Il logo ha gli angoli bianchi attorno al quadrato viola: li nascondiamo
+   arrotondando l'immagine con lo stesso raggio del disegno originale. */
+.lock-logo {
+  display: block;
+  width: 150px;
+  height: 150px;
+  margin: 0 auto;
+  border-radius: 20%;
 }
-.lock-sub { color: var(--muted); font-size: 14px; margin: 6px 0 18px; }
+.lock-sub { color: var(--muted); font-size: 14px; margin: 14px 0 18px; }
 .lock-input {
   width: 100%;
   background: var(--card-2);
