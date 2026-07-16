@@ -37,6 +37,7 @@ export default function App() {
   const [synced, setSynced] = useState(false)
   const [pulse, setPulse] = useState(0)
   const [view, setView] = useState('oggi') // 'oggi' | 'goals'
+  const [adding, setAdding] = useState(false) // il modulo si apre solo quando serve
   const [title, setTitle] = useState('')
   const [time, setTime] = useState('')
   const [urgency, setUrgency] = useState('calm')
@@ -97,6 +98,7 @@ export default function App() {
     setTime('')
     setUrgency('calm')
     setDate(today)
+    setAdding(false) // aggiunto: il modulo si richiude e torni alla tua giornata
   }
 
   function update(id, patch) {
@@ -204,57 +206,64 @@ export default function App() {
       {view === 'goals' ? (
         <GoalsView goals={goals} streak={streak} />
       ) : (
-        <OggiView
-          {...{
-            addTask,
-            title,
-            setTitle,
-            date,
-            setDate,
-            time,
-            setTime,
-            urgency,
-            setUrgency,
-            focusTask,
-            todayList,
-            upcomingList,
-            remaining,
-            tasks,
-            itemProps,
-          }}
-        />
+        <>
+          <OggiView {...{ focusTask, todayList, upcomingList, remaining, tasks, itemProps }} />
+
+          <button className="fab" onClick={() => setAdding(true)} aria-label="Aggiungi impegno">
+            +
+          </button>
+
+          {adding && (
+            <AddSheet
+              {...{
+                addTask,
+                title,
+                setTitle,
+                date,
+                setDate,
+                time,
+                setTime,
+                urgency,
+                setUrgency,
+              }}
+              onClose={() => setAdding(false)}
+            />
+          )}
+        </>
       )}
     </div>
   )
 }
 
-function OggiView({
-  addTask,
-  title,
-  setTitle,
-  date,
-  setDate,
-  time,
-  setTime,
-  urgency,
-  setUrgency,
-  focusTask,
-  todayList,
-  upcomingList,
-  remaining,
-  tasks,
-  itemProps,
-}) {
+// Il modulo di aggiunta: un pannello che sale dal basso, aperto solo quando serve.
+function AddSheet({ addTask, title, setTitle, date, setDate, time, setTime, urgency, setUrgency, onClose }) {
   return (
-    <>
-      <form className="add" onSubmit={addTask}>
+    <div className="sheet-back" onClick={onClose}>
+      <form className="sheet" onSubmit={addTask} onClick={(e) => e.stopPropagation()}>
+        <div className="sheet-grip" />
         <input
           className="add-title"
           type="text"
           placeholder="Cosa devi fare?"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          autoFocus
         />
+
+        <div className="urgency-pick" role="group" aria-label="Urgenza">
+          {URGENCY_ORDER.map((key) => (
+            <button
+              type="button"
+              key={key}
+              className={'chip' + (urgency === key ? ' chip-on' : '')}
+              onClick={() => setUrgency(key)}
+            >
+              <span className={'dot dot-' + key} />
+              {URGENCY[key].label}
+            </button>
+          ))}
+        </div>
+
         <div className="add-row">
           <input
             className="add-date"
@@ -270,24 +279,26 @@ function OggiView({
             onChange={(e) => setTime(e.target.value)}
             aria-label="Ora (facoltativa)"
           />
+        </div>
+
+        <div className="sheet-actions">
+          <button className="ghost-btn" type="button" onClick={onClose}>
+            Annulla
+          </button>
           <button className="add-btn" type="submit">
             Aggiungi
           </button>
         </div>
-        <div className="urgency-pick" role="group" aria-label="Urgenza">
-          {URGENCY_ORDER.map((key) => (
-            <button
-              type="button"
-              key={key}
-              className={'chip' + (urgency === key ? ' chip-on' : '')}
-              onClick={() => setUrgency(key)}
-            >
-              {URGENCY[key].emoji} {URGENCY[key].label}
-            </button>
-          ))}
-        </div>
       </form>
+    </div>
+  )
+}
 
+function OggiView({ focusTask, todayList, upcomingList, remaining, tasks, itemProps }) {
+  const vuoto = tasks.length === 0
+
+  return (
+    <>
       {focusTask && (
         <section className="focus-wrap">
           <p className="section-title">👉 La cosa di oggi</p>
@@ -295,13 +306,15 @@ function OggiView({
         </section>
       )}
 
-      <p className="count">
-        {remaining === 0
-          ? tasks.length === 0
-            ? 'Niente in lista. Aggiungi la prima cosa 👇'
-            : 'Oggi tutto fatto! 🎉'
-          : `${remaining} ${remaining === 1 ? 'cosa' : 'cose'} per oggi`}
-      </p>
+      {vuoto ? (
+        <p className="empty">Niente in lista.<br />Tocca il <b>+</b> e aggiungi la prima cosa.</p>
+      ) : (
+        <p className="section-title">
+          {remaining === 0
+            ? '🎉 Oggi tutto fatto!'
+            : `📋 ${remaining} ${remaining === 1 ? 'cosa' : 'cose'} per oggi`}
+        </p>
+      )}
 
       <ul className="list">
         {todayList.map((t) => (
@@ -400,10 +413,9 @@ function TaskItem({ task: t, toggleDone, toggleFocus, postpone, pullToToday, rem
       <div className="item-main">
         <span className="item-title">{t.title}</span>
         <span className="item-meta">
-          <span className="item-urg">
-            {URGENCY[t.urgency].emoji} {URGENCY[t.urgency].label}
-          </span>
-          {t.time && <span className="item-time">🕒 {t.time}</span>}
+          {/* L'urgenza si legge dalla striscia colorata: qui basta il pallino, senza ripetere la frase */}
+          <span className={'dot dot-' + t.urgency} title={URGENCY[t.urgency].label} />
+          {t.time && <span className="item-time">{t.time}</span>}
           {upcoming && <span className="item-day">{dayLabel(t.date)}</span>}
           {overdue && <span className="item-late">in ritardo</span>}
         </span>
@@ -430,13 +442,13 @@ function TaskItem({ task: t, toggleDone, toggleFocus, postpone, pullToToday, rem
           </button>
         )}
         {!t.done && !upcoming && (
-          <button className="move" onClick={() => postpone(t.id)} title="Rimando a domani">
-            → Domani
+          <button className="move" onClick={() => postpone(t.id)} aria-label="Rimando a domani">
+            Domani →
           </button>
         )}
         {!t.done && upcoming && (
-          <button className="move" onClick={() => pullToToday(t.id)} title="Riporta a oggi">
-            → Oggi
+          <button className="move" onClick={() => pullToToday(t.id)} aria-label="Riporta a oggi">
+            ← Oggi
           </button>
         )}
         <button className="del" onClick={() => removeTask(t.id)} aria-label="Elimina">
