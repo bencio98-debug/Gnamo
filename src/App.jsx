@@ -21,7 +21,7 @@ import {
   URGENCY,
   URGENCY_ORDER,
 } from './store.js'
-import { burst, scorePop, hype } from './celebrate.js'
+import { burst, scorePop, hype, fraseHypeACaso } from './celebrate.js'
 import { addToCalendar } from './calendar.js'
 
 function todayHeader() {
@@ -127,7 +127,7 @@ export default function App() {
       const y = rect.top + rect.height / 2
       burst(x, y, big ? 2.4 : 1)
       scorePop(x, y, '+1')
-      hype('AVANTI COSÌ CAZZO!')
+      hype(fraseHypeACaso())
     }
   }
 

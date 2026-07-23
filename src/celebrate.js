@@ -53,6 +53,35 @@ export function burst(x, y, power = 1) {
   requestAnimationFrame(step)
 }
 
+// Il "mazzo" di incoraggiamenti: ne esce uno a caso a ogni completamento,
+// senza ripetere quello di prima, così non stanca.
+const FRASI_HYPE = [
+  'AVANTI COSÌ CAZZO!',
+  'SEI UNA MACCHINA!',
+  'SPACCATUTTO!',
+  'GRANDE STRONZO!',
+  'UNO IN MENO, VAI!',
+  'INARRESTABILE!',
+  'CHE BESTIA!',
+  'BOOM! FATTO!',
+  'TI SEI SUPERATO!',
+  'FENOMENO!',
+  'NIENTE TI FERMA!',
+  'COSÌ SI FA, CAZZO!',
+  'UN TRENO!',
+  'DEVASTANTE!',
+]
+
+let ultimaFrase = -1
+export function fraseHypeACaso() {
+  let i
+  do {
+    i = Math.floor(Math.random() * FRASI_HYPE.length)
+  } while (FRASI_HYPE.length > 1 && i === ultimaFrase)
+  ultimaFrase = i
+  return FRASI_HYPE[i]
+}
+
 // Scritta gigante al centro dello schermo: incoraggiamento in stampatello.
 export function hype(text) {
   const el = document.createElement('div')
