@@ -22,6 +22,7 @@ import {
   URGENCY_ORDER,
 } from './store.js'
 import { burst, scorePop, hype, fraseHypeACaso } from './celebrate.js'
+import { playDing, isSoundOn, setSoundOn } from './sound.js'
 import { addToCalendar } from './calendar.js'
 
 function todayHeader() {
@@ -128,6 +129,7 @@ export default function App() {
       burst(x, y, big ? 2.4 : 1)
       scorePop(x, y, '+1')
       hype(fraseHypeACaso())
+      if (isSoundOn()) playDing()
     }
   }
 
@@ -340,6 +342,14 @@ function GoalsView({ goals, streak }) {
   const judged = goals.onTime + goals.late
   const onTimePct = judged > 0 ? Math.round((goals.onTime / judged) * 100) : null
   const importantPct = goals.total > 0 ? Math.round((goals.important / goals.total) * 100) : 0
+  const [soundOn, setSound] = useState(isSoundOn)
+
+  function toggleSound() {
+    const next = !soundOn
+    setSound(next)
+    setSoundOn(next)
+    if (next) playDing() // anteprima quando lo riaccendi
+  }
 
   return (
     <section className="goals">
@@ -391,6 +401,13 @@ function GoalsView({ goals, streak }) {
           </>
         )}
       </div>
+
+      <button className="sound-row" onClick={toggleSound} aria-pressed={soundOn}>
+        <span>{soundOn ? '🔊' : '🔇'} Suono al completamento</span>
+        <span className={'switch' + (soundOn ? ' on' : '')}>
+          <span className="knob" />
+        </span>
+      </button>
     </section>
   )
 }
