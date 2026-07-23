@@ -18,6 +18,7 @@ import {
   pushTasks,
   removeTaskRemote,
   pushEvent,
+  pushEvents,
   URGENCY,
   URGENCY_ORDER,
 } from './store.js'
@@ -50,8 +51,28 @@ export default function App() {
     ;(async () => {
       const [remoteTasks, remoteLog] = await Promise.all([fetchTasks(), fetchLog()])
       if (annullato) return
-      if (remoteTasks) setTasks(remoteTasks)
-      if (remoteLog) setLog(remoteLog)
+
+      // Copia locale già in stato all'avvio (= la scorta salvata sul dispositivo).
+      const localTasks = loadTasks()
+      const localLog = loadLog()
+
+      // PROTEZIONE ANTI-PERDITA: se il cloud risponde "vuoto" ma sul dispositivo
+      // ho dei dati, NON sovrascrivo con il vuoto. Tengo la copia locale e la
+      // ri-carico online, così il cloud si ripara da solo.
+      if (remoteTasks) {
+        if (remoteTasks.length === 0 && localTasks.length > 0) {
+          pushTasks(localTasks)
+        } else {
+          setTasks(remoteTasks)
+        }
+      }
+      if (remoteLog) {
+        if (remoteLog.length === 0 && localLog.length > 0) {
+          pushEvents(localLog)
+        } else {
+          setLog(remoteLog)
+        }
+      }
       if (remoteTasks && remoteLog) setSynced(true)
     })()
     return () => {

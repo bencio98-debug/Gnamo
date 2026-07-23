@@ -251,6 +251,14 @@ export async function pushEvent(event) {
   if (error) console.warn('Gnamo: punto non salvato online', error.message)
 }
 
+// Carica online più voci del registro insieme (usato per l'auto-riparazione).
+export async function pushEvents(events) {
+  if (!supabase || !events.length) return
+  const righe = events.map((e) => ({ ts: e.ts, important: !!e.important, late: !!e.late }))
+  const { error } = await supabase.from('gnamo_done_log').insert(righe)
+  if (error) console.warn('Gnamo: registro non ripristinato online', error.message)
+}
+
 // Ordina: prima i non fatti, poi per urgenza, poi per orario, poi per data di creazione.
 export function sortTasks(tasks) {
   return [...tasks].sort((a, b) => {
